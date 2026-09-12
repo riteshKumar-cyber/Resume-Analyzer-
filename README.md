@@ -224,13 +224,3 @@ Career & Interview Guidance
 * Advanced analytics dashboard
 
 ---
-
-## 👨‍💻 Author
-
-**Ritesh Kumar**
-
-B.Tech | Artificial Intelligence / Cyber Security
-
----
-
-⭐ If you find this project useful, please give the repository a **star**!

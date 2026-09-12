@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume Analyzer - ATS Score & Career Insights</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="PDF Resume Analyzer. Get instant ATS compatibility score, missing skills detection, grammar fixes, and personalized career roadmaps.">
+    <meta name="keywords" content="Resume Analyzer, ATS Score, Resume Checker, Career Roadmap, Resume Scanner">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', path='images/favicon.svg') }}">
+
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}">
+</head>
+<body>
+
+    <div class="app-container">
+
+        <!-- 1. NAVBAR / HEADER -->
+        <header class="navbar">
+            <a href="/" class="brand">
+                <div class="brand-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+                    </svg>
+                </div>
+                <span class="brand-text">Resume Analyzer</span>
+            </a>
+
+            <div class="nav-actions">
+                <button id="themeToggleBtn" class="theme-toggle-btn" title="Toggle Light/Dark Theme" aria-label="Toggle Theme">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- 2. HERO SECTION -->
+        <section class="hero">
+            <h1 class="hero-title">Supercharge Your Resume with <span>Smart Analytics</span></h1>
+            <p class="hero-subtitle">
+                Upload your PDF resume to receive real-time ATS score evaluation, missing skills detection, actionable improvement recommendations, and step-by-step career roadmaps.
+            </p>
+        </section>
+
+        <!-- 3. UPLOAD DROPZONE CARD -->
+        <div id="uploadCard" class="upload-card">
+            <div id="dropzone" class="dropzone">
+                <div class="dropzone-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                </div>
+                <div class="dropzone-text">
+                    <h3>Drag & Drop your PDF resume here</h3>
+                    <p>or click anywhere to browse from your computer</p>
+                    <span class="browse-btn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                        Select PDF File
+                    </span>
+                </div>
+                <p class="dropzone-hint">Supports PDF format (Max size {{ max_file_size_mb }}MB)</p>
+                <input type="file" id="fileInput" accept=".pdf" style="display: none;">
+            </div>
+
+            <!-- File Selected Preview Box -->
+            <div id="fileSelectedBox" class="file-selected-box">
+                <div class="file-info">
+                    <div class="file-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                    </div>
+                    <div class="file-details">
+                        <div id="fileNameDisplay" class="file-name">resume.pdf</div>
+                        <div id="fileSizeDisplay" class="file-size">0.0 KB</div>
+                    </div>
+                </div>
+                <button id="removeFileBtn" class="remove-file-btn" title="Remove File" aria-label="Remove File">
+                    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+
+            <!-- Analyze Button -->
+            <button id="analyzeBtn" class="analyze-btn" disabled>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                Analyze Resume
+            </button>
+        </div>
+
+        <!-- 4. ANIMATED LOADING OVERLAY -->
+        <div id="loadingContainer" class="loading-container">
+            <div class="loading-orb">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                </svg>
+            </div>
+            <h3 id="loadingText" class="loading-text">Extracting & Analyzing PDF Text...</h3>
+            <p id="loadingSubtext" class="loading-subtext">Evaluating structure, skills, and ATS compliance...</p>
+            
+            <div class="progress-bar-container">
+                <div id="progressBarFill" class="progress-bar-fill"></div>
+            </div>
+        </div>
+
+        <!-- 5. ANALYSIS DASHBOARD -->
+        <main id="dashboard" class="dashboard">
+
+            <!-- Dashboard Header -->
+            <div class="dashboard-header">
+                <div class="dashboard-title-box">
+                    <h2>Resume Evaluation Analysis</h2>
+                    <p>Powered by ATS Analytics Engine</p>
+                </div>
+                <div class="action-buttons">
+                    <button id="copySummaryBtn" class="btn-secondary" title="Copy Analysis Summary">
+                        <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                        Copy Summary
+                    </button>
+                    <button id="printPdfBtn" class="btn-secondary" title="Print or Save PDF Report">
+                        <svg viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                        Export Report
+                    </button>
+                    <button id="analyzeNewBtn" class="btn-secondary" style="border-color: var(--primary); color: var(--primary);" title="Upload Another Resume">
+                        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        New Analysis
+                    </button>
+                </div>
+            </div>
+
+            <!-- Grid Layout -->
+            <div class="dashboard-grid">
+
+                <!-- CARD 1: ATS SCORE GAUGE (Span 4) -->
+                <div class="card card-ats">
+                    <div class="card-header">
+                        <div class="card-icon" style="background: var(--primary-light); color: var(--primary);">
+                            <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                        </div>
+                        <h3 class="card-title">ATS Score</h3>
+                    </div>
+
+                    <div class="ats-gauge-container">
+                        <svg class="ats-gauge-svg" viewBox="0 0 160 160">
+                            <circle class="ats-gauge-bg" cx="80" cy="80" r="70" />
+                            <circle id="atsGaugeFill" class="ats-gauge-fill" cx="80" cy="80" r="70" />
+                        </svg>
+                        <div class="ats-score-content">
+                            <span id="atsScoreNumber" class="ats-score-number">0</span>
+                            <span class="ats-score-label">OUT OF 100</span>
+                        </div>
+                    </div>
+
+                    <div id="atsBadge" class="score-badge">Evaluating...</div>
+                </div>
+
+                <!-- CARD 2: EXECUTIVE SUMMARY (Span 8) -->
+                <div class="card card-summary">
+                    <div class="card-header">
+                        <div class="card-icon" style="background: var(--primary-light); color: var(--primary);">
+                            <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                        </div>
+                        <h3 class="card-title">Profile Executive Summary</h3>
+                    </div>
+
+                    <p id="summaryText" class="summary-text">Generating candidate profile summary...</p>
+
+                    <div class="exp-badge-container">
+                        <span class="exp-label">Detected Experience Level:</span>
+                        <span id="expLevelChip" class="exp-chip">Analyzing</span>
+                    </div>
+                </div>
+
+                <!-- CARD 3: TECHNICAL SKILLS (Span 6) -->
+                <div class="card card-tech-skills">
+                    <div class="card-header">
+                        <div class="card-icon" style="background: var(--primary-light); color: var(--primary);">
+                            <svg viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                        </div>
+                        <h3 class="card-title">Technical Skills & Tools</h3>
+                    </div>
+                    <div id="techSkillsList" class="skills-wrapper">
+                        <!-- Technical skill tags -->
+                    </div>
+                </div>
+
+                <!-- CARD 4: SOFT SKILLS (Span 6) -->
+                <div class="card card-soft-skills">
+                    <div class="card-header">
+                        <div class="card-icon" style="background: var(--primary-light); color: var(--primary);">
+                            <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                        </div>
+                        <h3 class="card-title">Soft Skills & Competencies</h3>
+                    </div>
+                    <div id="softSkillsList" class="skills-wrapper">
+                        <!-- Soft skill tags -->
+                    </div>
+                </div>
+
+                <!-- CARD 5: MISSING SKILLS (Span 12) -->
+                <div class="card card-missing-skills">
+                    <div class="card-header">
+                        <div class="card-icon" style="background: var(--warning-bg); color: var(--warning);">
+                            <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                        </div>
+                        <h3 class="card-title">Recommended Missing Industry Skills</h3>
+                    </div>
+                    <p style="font-size:0.9rem; color:var(--text-secondary); margin-bottom:1rem;">
+                        Adding these keywords and competencies can significantly improve your ATS keyword matching score:
+                    </p>
+                    <div id="missingSkillsList" class="skills-wrapper">
+                        <!-- Missing skill tags -->
+                    </div>
+                </div>
+
+                <!-- CARD 6: STRENGTHS (Span 6) -->
+                <div class="card card-strengths">
+                    <div class="card-header">
+                        <div class="card-icon" style="background: var(--success-bg); color: var(--success);">
+                            <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                        </div>
+                        <h3 class="card-title">Key Resume Strengths</h3>
+                    </div>
+                    <ul id="strengthsList" class="bullet-list">
+                        <!-- Strengths -->
+                    </ul>
+                </div>
+
+                <!-- CARD 7: WEAKNESSES (Span 6) -->
+                <div class="card card-weaknesses">
+                    <div class="card-header">
+                        <div class="card-icon" style="background: var(--danger-bg); color: var(--danger);">
+                            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+                        </div>
+                        <h3 class="card-title">Areas Needing Improvement</h3>
+                    </div>
+                    <ul id="weaknessesList" class="bullet-list">
+                        <!-- Weaknesses -->
+                    </ul>
+                </div>
+
+                <!-- CARD 8: ACTIONABLE SUGGESTIONS (Span 6) -->
+                <div class="card card-suggestions">
+                    <div class="card-header">
+                        <div class="card-icon" style="background: var(--primary-light); color: var(--primary);">
+                            <svg viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 1 1 7.072 0l-.548.547A3.374 3.374 0 0 0 14 18.469V19a2 2 0 0 1-2 2h-0a2 2 0 0 1-2-2v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                        </div>
+                        <h3 class="card-title">Actionable Recommendations</h3>
+                    </div>
+                    <ul id="suggestionsList" class="bullet-list">
+                        <!-- Suggestions -->
+                    </ul>
+                </div>
+
+                <!-- CARD 9: GRAMMAR & PHRASING (Span 6) -->
+                <div class="card card-grammar">
+                    <div class="card-header">
+                        <div class="card-icon" style="background: var(--warning-bg); color: var(--warning);">
+                            <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                        </div>
+                        <h3 class="card-title">Grammar & Formatting Edits</h3>
+                    </div>
+                    <ul id="grammarList" class="bullet-list">
+                        <!-- Grammar fixes -->
+                    </ul>
+                </div>
+
+                <!-- CARD 10: SUITABLE ROLES (Span 5) -->
+                <div class="card card-roles">
+                    <div class="card-header">
+                        <div class="card-icon" style="background: var(--primary-light); color: var(--primary);">
+                            <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+                        </div>
+                        <h3 class="card-title">Best Suitable Job Roles</h3>
+                    </div>
+                    <div id="recommendedRolesList" class="roles-list">
+                        <!-- Roles -->
+                    </div>
+                </div>
+
+                <!-- CARD 11: CAREER ROADMAP (Span 7) -->
+                <div class="card card-roadmap">
+                    <div class="card-header">
+                        <div class="card-icon" style="background: var(--primary-light); color: var(--primary);">
+                            <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                        </div>
+                        <h3 class="card-title">1-3 Year Career Growth Roadmap</h3>
+                    </div>
+                    <div id="careerRoadmapList" class="roadmap-timeline">
+                        <!-- Roadmap steps -->
+                    </div>
+                </div>
+
+                <!-- CARD 12: INTERVIEW PREPARATION TIPS (Span 12) -->
+                <div class="card card-interview">
+                    <div class="card-header">
+                        <div class="card-icon" style="background: var(--primary-light); color: var(--primary);">
+                            <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                        </div>
+                        <h3 class="card-title">Targeted Interview Preparation Tips</h3>
+                    </div>
+                    <div id="interviewTipsList" class="interview-grid">
+                        <!-- Interview prep items -->
+                    </div>
+                </div>
+
+            </div>
+        </main>
+
+        <!-- 6. TOAST CONTAINER -->
+        <div id="toastContainer" class="toast-container"></div>
+
+    </div>
+
+    <!-- Main JavaScript -->
+    <script src="{{ url_for('static', path='js/main.js') }}"></script>
+</body>
+</html>

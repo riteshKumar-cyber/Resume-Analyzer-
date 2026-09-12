@@ -85,8 +85,9 @@ async def render_homepage(request: Request):
     Renders the main single-page resume analyzer application interface.
     """
     return templates.TemplateResponse(
-        "index.html",
-        {
+        request=request,
+        name="index.html",
+        context={
             "request": request,
             "max_file_size_mb": settings.MAX_UPLOAD_SIZE_MB
         }
